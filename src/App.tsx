@@ -102,11 +102,19 @@ function App() {
     };
   }, [customMusicUrl]);
 
-  const letterContent = `Tớ đã suy nghĩ rất lâu trước khi quyết định viết những dòng này. Cuộc sống này có hàng tỷ người lướt qua nhau mỗi ngày, nhưng với tớ, sự xuất hiện của cậu chính là điều kỳ diệu nhất.
+  const letterContent = `Gửi em yêu của anh,
 
-Cậu có biết không? Mỗi khi thấy nụ cười của cậu, cả ngày của tớ dường như bừng sáng lên. Tớ thích cách cậu nói cười, thích sự ấm áp tỏa ra từ cậu và cả những lúc cậu vụng về đáng yêu. 
+Em à, những ngày vừa qua anh đã suy nghĩ rất nhiều. Anh biết những việc anh đã làm khiến cho em cảm thấy đau lòng và sợ hãi nhiều lắm. 
 
-Hôm nay, tớ muốn gom hết can đảm để gửi đến cậu bức thư này. Cậu chính là mảnh ghép ngọt ngào nhất mà tớ luôn tìm kiếm bấy lâu nay... ❤️`;
+Thấy em buồn, thấy những lúc chúng mình đi chơi em không còn vui vẻ và có phần hơi xa cách, anh thấy mình thật tệ và xót xa nhiều lắm...
+
+Anh cảm thấy hạnh phúc lắm khi thấy em cười, khi được em ngồi sau xe ôm, chúng mình nắm tay nhau khám phá muôn nơi.
+
+Hôm nay là ngày đầu tiên anh lĩnh lương tại công ty mới, anh muốn mang gì đó đến cho em, mong sao em sớm hết buồn. 
+
+Đừng buồn nữa nhé em yêu, hãy để anh được bù đắp cho em. Anh yêu em nhiều lắm em à.
+
+- Honey của em Đạt Bé Bỏng ❤️ -`;
 
   // ==========================================
   // 2. HIỆU ỨNG HẠT TRÁI TIM (CANVAS PARTICLES)
@@ -161,95 +169,47 @@ Hôm nay, tớ muốn gom hết can đảm để gửi đến cậu bức thư n
       c.restore();
     };
 
-    const smoothMousePos = { x: -1000, y: -1000 };
-    const lastEmitPos = { x: 0, y: 0 };
-
     let animationFrameId: number;
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Interpolate smooth mouse position
-      if (mousePosRef.current.x !== -1000) {
-        if (smoothMousePos.x === -1000) {
-          smoothMousePos.x = mousePosRef.current.x;
-          smoothMousePos.y = mousePosRef.current.y;
-        } else {
-          smoothMousePos.x += (mousePosRef.current.x - smoothMousePos.x) * 0.15;
-          smoothMousePos.y += (mousePosRef.current.y - smoothMousePos.y) * 0.15;
-        }
-      } else {
-        smoothMousePos.x = -1000;
-        smoothMousePos.y = -1000;
-      }
-
       const currentParticles = particlesRef.current;
-      const activeParticles: HeartParticle[] = [];
-
       currentParticles.forEach((p) => {
-        if (p.isTrail) {
-          // Trail particles gently drift, shrink, and fade out
-          p.x += p.speedX;
-          p.y += p.speedY;
-          p.opacity -= 0.015; // smooth fade
-          p.size -= 0.12;     // smooth shrink
+        p.y += p.speedY;
+        p.wobble += p.wobbleSpeed;
+        p.x += Math.sin(p.wobble) * 0.5 + p.speedX;
 
-          if (p.opacity > 0 && p.size > 0) {
-            drawHeart(ctx, p.x, p.y, p.size, p.color, p.opacity);
-            activeParticles.push(p);
-          }
-        } else {
-          // Background particles float up and reset
-          p.y += p.speedY;
-          p.wobble += p.wobbleSpeed;
-          p.x += Math.sin(p.wobble) * 0.5 + p.speedX;
-
-          if (p.y < -50) {
-            p.y = canvas.height + 50;
-            p.x = Math.random() * canvas.width;
-            p.opacity = Math.random() * 0.5 + 0.3;
-          }
-
-          drawHeart(ctx, p.x, p.y, p.size, p.color, p.opacity);
-          activeParticles.push(p);
+        // Nếu hạt bay ra ngoài màn hình ở phía trên, đưa về lại phía dưới
+        if (p.y < -50) {
+          p.y = canvas.height + 50;
+          p.x = Math.random() * canvas.width;
+          p.opacity = Math.random() * 0.5 + 0.3;
         }
+
+        drawHeart(ctx, p.x, p.y, p.size, p.color, p.opacity);
       });
 
-      // Spawn trail particles along the mouse movement path
+      // Tạo các hạt lấp lánh khi di chuột
       if (mousePosRef.current.x !== -1000) {
-        const dist = Math.hypot(
-          smoothMousePos.x - lastEmitPos.x,
-          smoothMousePos.y - lastEmitPos.y
-        );
-
-        if (dist > 8 || Math.random() < 0.08) {
-          activeParticles.push({
-            x: smoothMousePos.x + (Math.random() * 10 - 5),
-            y: smoothMousePos.y + (Math.random() * 10 - 5),
-            size: Math.random() * 10 + 6,
-            speedY: -(Math.random() * 0.8 + 0.2),
-            speedX: Math.random() * 1 - 0.5,
-            opacity: 0.85,
+        if (Math.random() < 0.15) {
+          currentParticles.push({
+            x: mousePosRef.current.x + (Math.random() * 20 - 10),
+            y: mousePosRef.current.y + (Math.random() * 20 - 10),
+            size: Math.random() * 8 + 4,
+            speedY: -(Math.random() * 1 + 0.3),
+            speedX: Math.random() * 0.8 - 0.4,
+            opacity: 0.8,
             color: colors[Math.floor(Math.random() * colors.length)],
-            wobble: Math.random() * Math.PI * 2,
-            wobbleSpeed: Math.random() * 0.05 + 0.02,
-            isTrail: true
+            wobble: Math.random() * 10,
+            wobbleSpeed: Math.random() * 0.05 + 0.02
           });
-          lastEmitPos.x = smoothMousePos.x;
-          lastEmitPos.y = smoothMousePos.y;
+          // Giới hạn số lượng hạt tối đa để tránh lag (max 120)
+          if (currentParticles.length > 120) {
+            currentParticles.shift();
+          }
         }
-
-        // Draw a cute, glowing main heart right at the smooth cursor position
-        const pulse = Math.sin(Date.now() * 0.005) * 3;
-        const mainHeartSize = 25 + pulse;
-        
-        ctx.save();
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = '#ff4757';
-        drawHeart(ctx, smoothMousePos.x, smoothMousePos.y, mainHeartSize, '#ff4757', 0.95);
-        ctx.restore();
       }
 
-      particlesRef.current = activeParticles;
       animationFrameId = requestAnimationFrame(render);
     };
 
@@ -631,7 +591,7 @@ Hôm nay, tớ muốn gom hết can đảm để gửi đến cậu bức thư n
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '5px', borderTop: '1px dashed var(--soft-pink)', paddingTop: '6px' }}>
-                    <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Hoặc chọn MP3 từ máy của bạn:</span>
+                    <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Hoặc chọn MP3 từ máy của em:</span>
                     <label
                       style={{
                         display: 'block',
@@ -675,7 +635,7 @@ Hôm nay, tớ muốn gom hết can đảm để gửi đến cậu bức thư n
             <div className="flap"></div>
             <div className="letter-preview">
               <span style={{ fontFamily: 'var(--font-romantic)', fontSize: '26px', color: 'var(--rose-gold)', fontWeight: 'bold' }}>
-                Gửi Cậu...
+                Gửi Em Yêu...
               </span>
               <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px' }}>
                 (Bấm để mở thư tình)
@@ -709,7 +669,7 @@ Hôm nay, tớ muốn gom hết can đảm để gửi đến cậu bức thư n
             <div className="polaroid-img-wrapper">
               <img src="/q2.jpg" alt="Her" className="polaroid-img" />
             </div>
-            <div className="polaroid-caption">Người làm tớ say đắm ✨</div>
+            <div className="polaroid-caption">Người làm anh say đắm ✨</div>
           </div>
 
           <div className="letter-card">
@@ -723,7 +683,7 @@ Hôm nay, tớ muốn gom hết can đảm để gửi đến cậu bức thư n
               {/* TRANG 1: LỜI TỎ TÌNH */}
               {currentPage === 0 && (
                 <>
-                  <div className="letter-header">Thư gửi người tớ thương...</div>
+                  <div className="letter-header">Thư gửi em yêu của anh...</div>
                   <div className="letter-text">{typedText}</div>
                 </>
               )}
@@ -731,26 +691,19 @@ Hôm nay, tớ muốn gom hết can đảm để gửi đến cậu bức thư n
               {/* TRANG 2: CÁC KỶ NIỆM / LÝ DO */}
               {currentPage === 1 && (
                 <div className="memories-container">
-                  <div className="letter-header" style={{ marginBottom: '10px' }}>Khoảnh khắc bên cậu... ✨</div>
+                  <div className="letter-header" style={{ marginBottom: '10px' }}>Anh có thể hứa với em rằng</div>
                   <div className="memory-card">
                     <div className="memory-icon">❤️</div>
                     <div className="memory-content">
-                      <h3>Ánh mắt đầu tiên</h3>
-                      <p>Ngày đầu tiên thấy cậu cười, tớ nhận ra tim mình đã đánh mất một nhịp.</p>
+                      <h3>Giữ bí mật vấn đề của 2 đứa</h3>
+                      <p>Khi có vấn đề gì anh sẽ nhẹ nhàng tâm sự với em, không bao giờ giấu diếm em nữa.</p>
                     </div>
                   </div>
                   <div className="memory-card">
                     <div className="memory-icon">☕</div>
                     <div className="memory-content">
-                      <h3>Những cuộc trò chuyện</h3>
-                      <p>Mỗi khi nói chuyện với cậu, thời gian trôi thật nhanh và ấm áp lạ lùng.</p>
-                    </div>
-                  </div>
-                  <div className="memory-card">
-                    <div className="memory-icon">🌟</div>
-                    <div className="memory-content">
-                      <h3>Sự chân thành</h3>
-                      <p>Tớ thích cách cậu luôn chân thành lắng nghe và ủng hộ tớ trong mọi việc.</p>
+                      <h3>Luôn lắng nghe em</h3>
+                      <p>Anh sẽ lắng nghe mọi tâm sự của em, không bao giờ phán xét hay coi thường em.</p>
                     </div>
                   </div>
                 </div>
@@ -767,9 +720,9 @@ Hôm nay, tớ muốn gom hết can đảm để gửi đến cậu bức thư n
                       <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                     </svg>
                   </div>
-                  <div className="proposal-title">Điều quan trọng tớ muốn hỏi... 💌</div>
+                  <div className="proposal-title">Điều quan trọng mà anh muốn nói... 💌</div>
                   <div style={{ fontFamily: 'var(--font-romantic)', fontSize: '26px', color: 'var(--text-dark)' }}>
-                    Cậu có đồng ý cùng tớ đi tiếp chặng đường dài phía trước và làm người yêu tớ nhé? ❤️
+                    Em đồng ý tha lỗi cho anh và tiếp tục cùng anh đi tiếp chặng đường phía trước nhé? ❤️
                   </div>
 
                   <div className="proposal-buttons">
@@ -778,7 +731,7 @@ Hôm nay, tớ muốn gom hết can đảm để gửi đến cậu bức thư n
                       onClick={handleAcceptProposal}
                       style={{ transform: `scale(${yesBtnScale})` }}
                     >
-                      Đồng ý chứ! 🥰
+                      Em tha lỗi cho anh! 🥰
                     </button>
                     <button
                       className="btn-no"
@@ -787,7 +740,7 @@ Hôm nay, tớ muốn gom hết can đảm để gửi đến cậu bức thư n
                       onTouchStart={handleNoBtnInteraction}
                       onClick={handleNoBtnInteraction}
                     >
-                      Không nha 😜
+                      Vẫn giận lắm 😜
                     </button>
                   </div>
                 </div>
@@ -858,12 +811,12 @@ Hôm nay, tớ muốn gom hết can đảm để gửi đến cậu bức thư n
             <div className="letter-body">
               <div className="celebration-box">
                 <p className="celebration-icon">🎉❤️💍</p>
-                <h2 className="celebration-title">Yeah! Tớ biết mà!</h2>
+                <h2 className="celebration-title">Yeah! Anh biết mà!</h2>
                 <p className="celebration-text">
-                  Cảm ơn cậu vì đã đồng ý! Hẹn hò với tớ nhé. Tớ hứa sẽ luôn làm cậu cười và yêu thương cậu thật nhiều mỗi ngày! 🥰🌸
+                  Cảm ơn em đã tha lỗi cho anh! Anh hứa sẽ luôn làm em cười, sửa chữa lỗi lầm và yêu thương em thật nhiều mỗi ngày! 🥰🌸
                 </p>
                 <p style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', color: 'var(--text-muted)', marginTop: '20px' }}>
-                  - Gửi cậu ngàn trái tim ngọt ngào nhất -
+                  - Gửi em yêu ngàn trái tim ngọt ngào nhất -
                 </p>
               </div>
             </div>
