@@ -1,0 +1,82 @@
+:root {
+  /* Màu sắc chủ đạo (Romantic Theme) */
+  --primary-pink: #ff6b8b;
+  --primary-hover: #ff477e;
+  --soft-pink: #ffd1dc;
+  --light-pink: #fff0f3;
+  --accent-rose: #d63031;
+  --rose-gold: #b76e79;
+  --card-bg: rgba(255, 255, 255, 0.88);
+  --glass-border: rgba(255, 107, 139, 0.15);
+  --text-dark: #2d3436;
+  --text-muted: #636e72;
+  --shadow-premium: 0 15px 35px rgba(255, 107, 139, 0.15), 0 5px 15px rgba(0, 0, 0, 0.05);
+  --shadow-hover: 0 20px 45px rgba(255, 107, 139, 0.25), 0 8px 25px rgba(0, 0, 0, 0.08);
+
+  /* Fonts */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-romantic: 'Dancing Script', 'Caveat', cursive;
+  --font-serif: 'Playfair Display', serif;
+
+  font-family: var(--font-sans);
+  background: linear-gradient(135deg, #ffeef1 0%, #ffd1dc 50%, #ffc0cb 100%);
+  color: var(--text-dark);
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent;
+  perspective: 1000px;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--light-pink);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--soft-pink);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-pink);
+}
+
+/* Animations toàn cục */
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(1deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+@keyframes pulse-gentle {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}

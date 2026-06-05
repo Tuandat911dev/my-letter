@@ -1,0 +1,884 @@
+/* APP.CSS - LOVE LETTER WEB APPLICATION STYLES */
+
+.app-container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* Canvas Background */
+.heart-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Music Controller - Vinyl Disc collapsing style */
+.music-record-wrapper {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.music-record-disc {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15), 0 0 0 3px rgba(255, 255, 255, 0.4);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background: #2d3436;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.music-record-disc:hover {
+  transform: scale(1.08) rotate(10deg);
+  box-shadow: 0 10px 25px rgba(255, 107, 139, 0.25), 0 0 0 4px rgba(255, 255, 255, 0.6);
+}
+
+.music-record-disc.playing svg {
+  animation: spin 5s linear infinite;
+}
+
+.vinyl-record {
+  width: 100%;
+  height: 100%;
+}
+
+.music-settings-panel {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 107, 139, 0.2);
+  border-radius: 18px;
+  padding: 15px;
+  box-shadow: 0 15px 35px rgba(255, 107, 139, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 200px;
+  transform-origin: top right;
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ==========================================
+   1. ENVELOPE SCREEN (PHONG THƯ)
+   ========================================== */
+.envelope-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  animation: float 4s ease-in-out infinite;
+}
+
+.envelope-wrapper {
+  position: relative;
+  width: 320px;
+  height: 220px;
+  background-color: #ffd1dc;
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease;
+}
+
+/* Nắp phong thư */
+.envelope-wrapper .flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-left: 160px solid transparent;
+  border-right: 160px solid transparent;
+  border-top: 120px solid #ff9ebb; /* Đậm hơn thân thư một chút để có bóng */
+  border-bottom: 0 solid transparent;
+  transform-origin: top;
+  z-index: 4;
+  transition: transform 0.6s ease, border-top-color 0.6s ease;
+}
+
+/* Thân phong thư trước (các nếp gấp che) */
+.envelope-wrapper .pocket {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-left: 160px solid #ffb3c6;
+  border-right: 160px solid #ffb3c6;
+  border-bottom: 110px solid #ffa3b8;
+  border-top: 110px solid transparent;
+  border-radius: 0 0 10px 10px;
+  z-index: 3;
+}
+
+/* Thư ẩn bên trong */
+.envelope-wrapper .letter-preview {
+  position: absolute;
+  bottom: 10px;
+  left: 20px;
+  right: 20px;
+  height: 160px;
+  background: white;
+  border-radius: 6px;
+  padding: 15px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  z-index: 2;
+  transition: transform 0.6s ease, z-index 0.6s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--soft-pink);
+}
+
+.heart-seal {
+  width: 45px;
+  height: 45px;
+  background: var(--primary-pink);
+  position: absolute;
+  top: 97.5px; /* Giữa nắp mở */
+  left: calc(50% - 22.5px);
+  border-radius: 50%;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 10px rgba(255, 107, 139, 0.4);
+  transition: all 0.3s ease;
+  animation: pulse-gentle 2s infinite;
+}
+
+.heart-seal svg {
+  width: 22px;
+  height: 22px;
+  fill: white;
+}
+
+.envelope-wrapper:hover .heart-seal {
+  transform: scale(1.15);
+  background: var(--accent-rose);
+}
+
+/* Trạng thái Mở Thư */
+.envelope-wrapper.open .flap {
+  transform: rotateX(180deg);
+  border-top-color: #ffd1dc; /* Đồng bộ màu khi lật */
+  z-index: 1;
+}
+
+.envelope-wrapper.open .letter-preview {
+  transform: translateY(-110px);
+  z-index: 4;
+}
+
+.envelope-wrapper.open .heart-seal {
+  opacity: 0;
+  transform: scale(0);
+}
+
+/* Hiệu ứng phóng to chuyển cảnh khi bắt đầu đọc */
+.envelope-zoom-out {
+  animation: envelopeZoomTransition 1.8s forwards ease-in-out;
+}
+
+@keyframes envelopeZoomTransition {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  30% {
+    transform: scale(1.05) translateY(-20px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(3.5);
+    opacity: 0;
+  }
+}
+
+.click-prompt {
+  margin-top: 30px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(5px);
+  padding: 8px 22px;
+  border-radius: 30px;
+  border: 1px solid rgba(255, 107, 139, 0.2);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  color: var(--primary-pink);
+  font-size: 15px;
+  letter-spacing: 0.5px;
+  animation: pulse-gentle 1.5s infinite;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 5px 15px rgba(255, 107, 139, 0.08);
+}
+
+/* ==========================================
+   2. MAIN LETTER SCREEN (ĐỌC THƯ)
+   ========================================== */
+.reading-layout {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+  max-width: 980px;
+  width: 95%;
+  z-index: 10;
+  flex-wrap: wrap;
+  padding: 20px 0;
+}
+
+.polaroid-card {
+  background: white;
+  padding: 14px 14px 20px 14px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  transform: rotate(-3deg);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  max-width: 250px;
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  animation: polaroidFadeIn 0.8s 0.3s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  opacity: 0;
+  transform: translateY(20px) rotate(-3deg);
+  z-index: 12;
+}
+
+.polaroid-card:hover {
+  transform: translateY(-8px) rotate(0deg) scale(1.04);
+  box-shadow: 0 15px 35px rgba(255, 107, 139, 0.18);
+  border-color: rgba(255, 107, 139, 0.2);
+}
+
+.polaroid-img-wrapper {
+  width: 100%;
+  height: 280px;
+  overflow: hidden;
+  background: #fdf6f7;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+}
+
+.polaroid-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.polaroid-card:hover .polaroid-img {
+  transform: scale(1.08);
+}
+
+.polaroid-caption {
+  margin-top: 12px;
+  font-family: var(--font-romantic);
+  font-size: 22px;
+  color: var(--rose-gold);
+  text-align: center;
+  font-weight: bold;
+  user-select: none;
+}
+
+@keyframes polaroidFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(-3deg);
+  }
+}
+
+.letter-card {
+  width: 90%;
+  max-width: 650px;
+  min-height: 520px;
+  background: var(--card-bg);
+  backdrop-filter: blur(15px);
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: var(--shadow-premium);
+  border: 1px solid var(--glass-border);
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  opacity: 0;
+  transform: translateY(30px);
+  animation: letterFadeIn 0.8s 0.2s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes letterFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.letter-decor-top {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: space-between;
+  opacity: 0.4;
+}
+
+.decor-heart {
+  color: var(--primary-pink);
+  animation: float 3s ease-in-out infinite;
+}
+
+.decor-heart:nth-child(2) {
+  animation-delay: 1.5s;
+}
+
+.letter-body {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 320px;
+  padding: 20px 0;
+}
+
+/* Trang 1: Lời ngỏ */
+.letter-header {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  color: #b76e79; /* Rose Gold */
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  border-bottom: 1px dashed rgba(183, 110, 121, 0.3);
+  padding-bottom: 10px;
+  width: 100%;
+}
+
+.letter-text {
+  font-family: var(--font-romantic);
+  font-size: clamp(20px, 4.5vw, 26px);
+  line-height: 1.6;
+  color: #3b3a30;
+  text-align: left;
+  white-space: pre-wrap;
+  width: 100%;
+  min-height: 200px;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+  background: linear-gradient(transparent 96%, rgba(255, 107, 139, 0.12) 96%);
+  background-size: 100% 1.6em;
+  background-attachment: local;
+  padding-left: 5px;
+}
+
+/* Trang 2: Lý do & Kỷ niệm */
+.memories-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.memory-card {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 107, 139, 0.1);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+}
+
+.memory-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  background: white;
+  border-color: var(--soft-pink);
+  box-shadow: 0 8px 20px rgba(255, 107, 139, 0.08);
+}
+
+.memory-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--light-pink);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-pink);
+  flex-shrink: 0;
+}
+
+.memory-content h3 {
+  margin: 0 0 5px;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  color: var(--rose-gold);
+  font-weight: 600;
+}
+
+.memory-content p {
+  margin: 0;
+  font-family: var(--font-romantic);
+  font-size: 22px;
+  color: var(--text-dark);
+  line-height: 1.3;
+}
+
+.proposal-gif-placeholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: var(--light-pink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--soft-pink);
+  position: relative;
+  animation: float 3s ease-in-out infinite;
+  box-shadow: 0 8px 25px rgba(255, 107, 139, 0.15);
+}
+
+.pulse-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(255, 107, 139, 0.25);
+  animation: ripple 3s infinite ease-out;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+.proposal-gif-placeholder svg {
+  width: 60px;
+  height: 60px;
+  color: var(--primary-pink);
+  z-index: 2;
+}
+
+.proposal-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+  margin-top: 20px;
+  position: relative;
+  width: 100%;
+  min-height: 80px;
+}
+
+.btn-yes {
+  background: linear-gradient(135deg, var(--primary-pink) 0%, #fd79a8 100%);
+  color: white;
+  border: none;
+  padding: 14px 35px;
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 30px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(255, 107, 139, 0.4);
+  transition: all 0.3s ease;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-yes:hover {
+  transform: scale(1.1);
+  box-shadow: 0 10px 25px rgba(255, 107, 139, 0.6);
+  background: linear-gradient(135deg, var(--primary-hover) 0%, #e84393 100%);
+}
+
+.btn-no {
+  background: #dfe6e9;
+  color: var(--text-muted);
+  border: none;
+  padding: 14px 35px;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* ==========================================
+   3. CELEBRATION SCREEN (MÀN HÌNH CHẤP NHẬN)
+   ========================================== */
+.celebration-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 20px;
+  animation: pulse-gentle 3s infinite;
+}
+
+.celebration-icon {
+  font-size: 80px;
+  margin: 0;
+  animation: float 2.5s infinite;
+}
+
+.celebration-title {
+  font-family: var(--font-serif);
+  font-size: 36px;
+  color: var(--primary-pink);
+  font-weight: 700;
+  margin: 0;
+}
+
+.celebration-text {
+  font-family: var(--font-romantic);
+  font-size: 32px;
+  line-height: 1.4;
+  color: var(--rose-gold);
+  margin: 10px 0 0;
+}
+
+/* Navigation cho Card */
+.letter-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 30px;
+  border-top: 1px solid rgba(255, 107, 139, 0.1);
+  padding-top: 20px;
+  width: 100%;
+}
+
+.btn-nav {
+  background: transparent;
+  border: 1px solid var(--soft-pink);
+  color: var(--primary-pink);
+  padding: 8px 18px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-nav:hover:not(:disabled) {
+  background: var(--light-pink);
+  border-color: var(--primary-pink);
+  transform: translateY(-1px);
+}
+
+.btn-nav:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.page-indicator-dots {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+}
+
+.indicator-dot {
+  font-size: 20px;
+  color: var(--soft-pink);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.indicator-dot.active {
+  color: var(--primary-pink);
+  transform: scale(1.35);
+  text-shadow: 0 0 10px rgba(255, 107, 139, 0.5);
+}
+
+/* Keyframes */
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================
+   4. HIỆN THỊ ĐÁP ỨNG (RESPONSIVE DESIGN)
+   ========================================== */
+
+/* Media Queries cho Máy tính bảng (Tablet: max-width 1024px) */
+@media (max-width: 1024px) {
+  .reading-layout {
+    gap: 20px;
+    max-width: 900px;
+  }
+
+  .polaroid-card {
+    max-width: 220px;
+  }
+
+  .polaroid-img-wrapper {
+    height: 240px;
+  }
+
+  .polaroid-caption {
+    font-size: 20px;
+  }
+
+  .letter-card {
+    padding: 35px;
+    max-width: 580px;
+    min-height: 500px;
+  }
+
+  .letter-header {
+    font-size: 28px;
+    margin-bottom: 15px;
+  }
+
+  .letter-text {
+    font-size: 24px;
+    min-height: 220px;
+  }
+
+  .memory-content p {
+    font-size: 20px;
+  }
+
+  .proposal-title {
+    font-size: 24px;
+  }
+
+  .btn-yes, .btn-no {
+    padding: 12px 28px;
+    font-size: 16px;
+  }
+
+  .celebration-title {
+    font-size: 32px;
+  }
+
+  .celebration-text {
+    font-size: 28px;
+  }
+}
+
+/* Media Queries cho Điện thoại (Mobile: max-width 600px) */
+@media (max-width: 600px) {
+  .music-record-wrapper {
+    top: 15px;
+    right: 15px;
+    gap: 6px;
+  }
+
+  .music-record-disc {
+    width: 44px;
+    height: 44px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15), 0 0 0 2px rgba(255, 255, 255, 0.4);
+  }
+
+  .music-settings-panel {
+    width: 180px;
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .reading-layout {
+    flex-direction: column-reverse;
+    gap: 20px;
+    padding: 10px 0;
+  }
+
+  .polaroid-card {
+    max-width: 200px;
+    padding: 10px 10px 15px 10px;
+    transform: rotate(2deg);
+    animation: polaroidFadeInMobile 0.8s 0.2s forwards;
+  }
+
+  @keyframes polaroidFadeInMobile {
+    to {
+      opacity: 1;
+      transform: translateY(0) rotate(2deg);
+    }
+  }
+
+  .polaroid-img-wrapper {
+    height: 220px;
+  }
+
+  .polaroid-caption {
+    font-size: 18px;
+    margin-top: 8px;
+  }
+
+  .letter-card {
+    padding: 24px;
+    min-height: 470px;
+    border-radius: 20px;
+  }
+
+  .letter-header {
+    font-size: 24px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+  }
+
+  .letter-text {
+    font-size: 20px;
+    line-height: 1.4;
+    min-height: 240px;
+  }
+
+  .memories-container {
+    gap: 10px;
+  }
+
+  .memory-card {
+    padding: 12px;
+    gap: 10px;
+    border-radius: 12px;
+  }
+
+  .memory-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .memory-content h3 {
+    font-size: 14px;
+  }
+
+  .memory-content p {
+    font-size: 18px;
+  }
+
+  .proposal-title {
+    font-size: 20px;
+    margin-bottom: 5px;
+  }
+
+  .proposal-gif-placeholder {
+    width: 100px;
+    height: 100px;
+  }
+
+  .proposal-gif-placeholder svg {
+    width: 50px;
+    height: 50px;
+  }
+
+  .btn-yes, .btn-no {
+    padding: 10px 22px;
+    font-size: 14px;
+  }
+
+  .proposal-buttons {
+    gap: 15px;
+    min-height: 70px;
+  }
+
+  .celebration-icon {
+    font-size: 60px;
+  }
+
+  .celebration-title {
+    font-size: 26px;
+  }
+
+  .celebration-text {
+    font-size: 24px;
+  }
+
+  .btn-nav {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+}
+
+/* Hỗ trợ các dòng điện thoại siêu nhỏ (max-width 360px) */
+@media (max-width: 360px) {
+  .envelope-wrapper {
+    transform: scale(0.8);
+    transform-origin: center;
+  }
+
+  .envelope-container {
+    height: 200px; /* Bù lại khoảng trống do scale */
+  }
+
+  .letter-card {
+    padding: 15px;
+    min-height: 430px;
+  }
+
+  .letter-text {
+    font-size: 18px;
+    min-height: 200px;
+  }
+
+  .memory-content p {
+    font-size: 16px;
+  }
+
+  .btn-yes, .btn-no {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+}
