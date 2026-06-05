@@ -703,7 +703,7 @@ Hôm nay là ngày đầu tiên anh lĩnh lương tại công ty mới, anh mu�
                     <div className="memory-icon">☕</div>
                     <div className="memory-content">
                       <h3>Luôn lắng nghe em</h3>
-                      <p>Anh sẽ lắng nghe mọi tâm sự của em, không bao giờ phán xét hay coi thường em.</p>
+                      <p>Anh sẽ lắng nghe mọi tâm sự của em, không bao giờ để em buồn nữa</p>
                     </div>
                   </div>
                 </div>
