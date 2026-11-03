@@ -1,827 +1,546 @@
-import { useState, useEffect, useRef, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import './App.css';
 
 // ==========================================
-// 1. TRẠNG THÁI & HẰNG SỐ CỦA BÀI HÁT CANON IN D
+// NỘI DUNG THƯ
 // ==========================================
-const SYNTH_CHORDS = [
-  [146.83, 293.66, 369.99, 440.00], // D (D3, D4, F#4, A4)
-  [110.00, 220.00, 277.18, 329.63], // A (A2, A3, C#4, E4)
-  [123.47, 246.94, 293.66, 369.99], // Bm (B2, B3, D4, F#4)
-  [92.50, 185.00, 220.00, 277.18],  // F#m (F#2, F#3, A3, C#4)
-  [98.00, 196.00, 246.94, 293.66],  // G (G2, G3, B3, D4)
-  [73.42, 146.83, 185.00, 220.00],   // D (D2, D3, F#3, A3)
-  [98.00, 196.00, 246.94, 293.66],  // G (G2, G3, B3, D4)
-  [110.00, 220.00, 277.18, 329.63]  // A (A2, A3, C#4, E4)
+type Para = { text: string };
+
+const GREETING = 'Chào buổi sáng người con gái anh thương';
+const NAME = 'Quỳnh xinh nhà anh';
+
+const PARAGRAPHS: Para[] = [
+  {
+    text: 'Hôm nay dậy chân có đau lắm không em? Nếu mà đau quá thì ới anh một tiếng nha.',
+  },
+  {
+    text: 'Đêm qua ngồi nghe em chia sẻ những dòng suy nghĩ trong lòng, anh đã suy nghĩ rất lâu. Anh thương em nhiều lắm và cũng tự trách bản thân mình vì đã vô tâm để những khoảng lặng của bản thân vô tình tạo cho em cảm giác bất an.',
+  },
+  {
+    text: 'Anh biết dạo này em yêu của anh phải chịu những áp lực từ việc học, từ việc kiếm việc làm, nghĩ về tương lai khiến em phải suy nghĩ nhiều. Thấy em như vậy anh rất muốn ở bên, rất muốn được ôm lấy em để làm chỗ dựa tinh thần cho em. Nhưng nhìn lại, đúng thật đôi lúc anh tự nhiên thu mình lại, không phải vì bớt thương em mà là vì sợ mệt mỏi thoáng qua khiến anh chậm lại một bước. Anh cảm thấy buồn khi mà chính sự im lặng không lời giải thích ấy lại vô tình làm em tổn thương, anh xin lỗi em nhiều.',
+  },
+  {
+    text: 'Một điều nữa, khi nghe em nói về chuyện mai sau anh không còn yêu em nữa, anh thấy hơi nhói ở ngực một chút. Anh muốn ôm em thật chặt và nói cho em điều này: vị trí của em chưa từng và sẽ không bao giờ bị thay đổi trong trái tim của anh. Người mà anh muốn nói chuyện, muốn nhắn tin mỗi ngày sẽ luôn là em mà không phải một ai khác.',
+  },
+  {
+    text: 'Sáng nay thức dậy, anh nhớ là mình đã vô tình ngủ quên mà không kịp chúc em ngủ ngon, anh xin lỗi em nhé. Chắc đêm qua em đã trằn trọc và nghĩ ngợi nhiều lắm đúng không?',
+  },
+  {
+    text: 'Từ hôm nay, anh sẽ chú ý hơn để em không bao giờ phải cảm thấy cô đơn hay bất an nữa nha em yêu. Hãy để anh là chốn bình yên để em tựa vào mỗi khi mệt mỏi nhé.',
+  },
 ];
 
-const SYNTH_MELODY = [
-  739.99, // F#5
-  659.25, // E5
-  587.33, // D5
-  554.37, // C#5
-  493.88, // B4
-  440.00, // A4
-  493.88, // B4
-  554.37  // C#5
-];
+const PS_NOTE = 'À, lát nữa em dậy thì lên quán bánh mỳ BBQ lấy đồ ăn sáng nhé.';
 
-const MP3_PLAYLIST = [
-  { name: 'Biển Tình (bientinh.mp3)', url: '/bientinh.mp3' },
-  { name: 'Beautiful Dream', url: 'https://assets.mixkit.co/music/preview/mixkit-beautiful-dream-493.mp3' },
-  { name: 'Love Is Eternal', url: 'https://assets.mixkit.co/music/preview/mixkit-love-is-eternal-1014.mp3' },
-  { name: 'Old Letter Lofi', url: 'https://assets.mixkit.co/music/preview/mixkit-old-letter-391.mp3' }
-];
+// ==========================================
+// TIỆN ÍCH
+// ==========================================
+type Screen = 'invite' | 'letter' | 'sealed';
 
-interface HeartParticle {
+const HEART_PATH =
+  'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z';
+
+const HeartIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+    <path d={HEART_PATH} />
+  </svg>
+);
+
+const vars = (v: Record<string, string | number>) => v as CSSProperties;
+
+// ==========================================
+// PHONG BÌ
+// ==========================================
+function Envelope({ state }: { state: 'closed' | 'opening' | 'sealed' }) {
+  return (
+    <div className={`env env--${state}`}>
+      <div className="env-back" />
+      <div className="env-paper">
+        <span className="env-paper-title">Gửi Quỳnh</span>
+        <span className="env-paper-line" />
+        <span className="env-paper-line" />
+        <span className="env-paper-line short" />
+      </div>
+      <div className="env-front">
+        <span className="env-to">
+          Gửi: <b>Quỳnh xinh</b>
+        </span>
+      </div>
+      <div className="env-flap" />
+      <div className="env-seal">
+        <HeartIcon />
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// APP
+// ==========================================
+interface Particle {
   x: number;
   y: number;
+  vx: number;
+  vy: number;
   size: number;
-  speedY: number;
-  speedX: number;
-  opacity: number;
+  rot: number;
+  vr: number;
+  alpha: number;
+  life: number;
+  decay: number;
+  gravity: number;
+  phase: number;
   color: string;
-  wobble: number;
-  wobbleSpeed: number;
-  isTrail?: boolean;
+  kind: 'heart' | 'spark';
+  ambient: boolean;
 }
 
 function App() {
-  // Navigation & UI state
-  const [screen, setScreen] = useState<'envelope' | 'reading' | 'accepted'>('envelope');
-  const [envelopeOpen, setEnvelopeOpen] = useState(false);
-  const [zoomTransition, setZoomTransition] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
-
-  // Music state
+  const [screen, setScreen] = useState<Screen>('invite');
+  const [opening, setOpening] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const [folding, setFolding] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [musicType, setMusicType] = useState<'synth' | 'mp3'>('mp3');
-  const [selectedMp3Index, setSelectedMp3Index] = useState(0);
-  const [musicMenuOpen, setMusicMenuOpen] = useState(false);
 
-  // Typewriter effect state
-  const [typedText, setTypedText] = useState('');
-
-  // Interactive buttons state
-  const [noBtnStyle, setNoBtnStyle] = useState<CSSProperties>({});
-  const [yesBtnScale, setYesBtnScale] = useState(1);
-
-  // Audio references
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const synthIntervalRef = useRef<any>(null);
-  const audioTagRef = useRef<HTMLAudioElement | null>(null);
-
-  // Canvas reference
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const particlesRef = useRef<HeartParticle[]>([]);
-  const mousePosRef = useRef({ x: -1000, y: -1000 });
+  const burstRef = useRef<(x: number, y: number, n: number, power?: number) => void>(() => { });
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const tiltRef = useRef<HTMLDivElement | null>(null);
+  const progressRef = useRef<HTMLDivElement | null>(null);
+  const sealedEnvRef = useRef<HTMLDivElement | null>(null);
+  const timers = useRef<number[]>([]);
 
-  // Custom music upload state
-  const [customMusicUrl, setCustomMusicUrl] = useState<string | null>(null);
-  const [customMusicName, setCustomMusicName] = useState<string>('');
-
-  const handleCustomMusicUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (customMusicUrl) {
-        URL.revokeObjectURL(customMusicUrl);
-      }
-      const url = URL.createObjectURL(file);
-      setCustomMusicUrl(url);
-      setCustomMusicName(file.name);
-      setMusicType('mp3');
-      setSelectedMp3Index(999); // 999 indicates custom uploaded music
-    }
+  const later = (fn: () => void, ms: number) => {
+    timers.current.push(window.setTimeout(fn, ms));
   };
 
-  useEffect(() => {
-    return () => {
-      if (customMusicUrl) {
-        URL.revokeObjectURL(customMusicUrl);
-      }
-    };
-  }, [customMusicUrl]);
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
-  const letterContent = `Gửi em yêu của anh,
+  const today = new Intl.DateTimeFormat('vi-VN', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+  }).format(new Date());
 
-Em à, những ngày vừa qua anh đã suy nghĩ rất nhiều. Anh biết những việc anh đã làm khiến cho em cảm thấy đau lòng và sợ hãi nhiều lắm. 
-
-Thấy em buồn, thấy những lúc chúng mình đi chơi em không còn vui vẻ và có phần hơi xa cách, anh thấy mình thật tệ và xót xa nhiều lắm...
-
-Anh cảm thấy hạnh phúc lắm khi thấy em cười, khi được em ngồi sau xe ôm, chúng mình nắm tay nhau khám phá muôn nơi.
-
-Hôm nay là ngày đầu tiên anh lĩnh lương tại công ty mới, anh muốn mang gì đó đến cho em, mong sao em sớm hết buồn. 
-
-Đừng buồn nữa nhé em yêu, hãy để anh được bù đắp cho em. Anh yêu em nhiều lắm em à.
-
-- Honey của em Đạt Bé Bỏng ❤️ -`;
-
-  // ==========================================
-  // 2. HIỆU ỨNG HẠT TRÁI TIM (CANVAS PARTICLES)
-  // ==========================================
+  // ---------- Nền: tim bay + lấp lánh ----------
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
 
-    const resizeCanvas = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let w = 0;
+    let h = 0;
+    const resize = () => {
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+    resize();
+    window.addEventListener('resize', resize);
 
-    // Tạo các hạt ban đầu
-    const colors = ['#ff6b8b', '#ff8da1', '#ffb8c6', '#ff4757', '#ffa502'];
-    const particles: HeartParticle[] = [];
-    const count = 30;
+    const heart = new Path2D(
+      'M0 -0.3 C -0.25 -0.65 -0.75 -0.45 -0.75 -0.05 C -0.75 0.3 -0.35 0.55 0 0.8 C 0.35 0.55 0.75 0.3 0.75 -0.05 C 0.75 -0.45 0.25 -0.65 0 -0.3 Z'
+    );
+    const heartColors = ['#f07a93', '#f59fb0', '#e8506e', '#ffb3a7', '#f6c1cc'];
+    const pick = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
 
-    for (let i = 0; i < count; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height + canvas.height,
-        size: Math.random() * 15 + 8,
-        speedY: -(Math.random() * 1.5 + 0.5),
-        speedX: Math.random() * 1 - 0.5,
-        opacity: Math.random() * 0.5 + 0.3,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        wobble: Math.random() * 10,
-        wobbleSpeed: Math.random() * 0.02 + 0.01
-      });
-    }
-    particlesRef.current = particles;
+    const ambientHeart = (initial: boolean): Particle => ({
+      x: Math.random() * w,
+      y: initial ? Math.random() * h : h + 30,
+      vx: (Math.random() - 0.5) * 0.25,
+      vy: -(Math.random() * 0.5 + 0.25),
+      size: Math.random() * 9 + 6,
+      rot: (Math.random() - 0.5) * 0.6,
+      vr: (Math.random() - 0.5) * 0.004,
+      alpha: Math.random() * 0.3 + 0.15,
+      life: 1,
+      decay: 0,
+      gravity: 0,
+      phase: Math.random() * Math.PI * 2,
+      color: pick(heartColors),
+      kind: 'heart',
+      ambient: true,
+    });
 
-    const drawHeart = (c: CanvasRenderingContext2D, x: number, y: number, size: number, color: string, opacity: number) => {
-      c.save();
-      c.beginPath();
-      c.translate(x, y);
-      c.scale(size / 30, size / 30);
-      c.fillStyle = color;
-      c.globalAlpha = opacity;
-      c.moveTo(0, -6);
-      c.bezierCurveTo(-6, -12, -15, -6, -15, 3);
-      c.bezierCurveTo(-15, 12, -6, 18, 0, 27);
-      c.bezierCurveTo(6, 18, 15, 12, 15, 3);
-      c.bezierCurveTo(15, -6, 6, -12, 0, -6);
-      c.closePath();
-      c.fill();
-      c.restore();
-    };
+    const ambientSpark = (): Particle => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: 0,
+      vy: -0.08,
+      size: Math.random() * 1.8 + 0.8,
+      rot: 0,
+      vr: 0,
+      alpha: Math.random() * 0.6 + 0.3,
+      life: 1,
+      decay: 0,
+      gravity: 0,
+      phase: Math.random() * Math.PI * 2,
+      color: '#fff6e0',
+      kind: 'spark',
+      ambient: true,
+    });
 
-    let animationFrameId: number;
-    const render = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const heartCount = reduce ? 6 : Math.round(Math.min(26, w / 40));
+    const sparkCount = reduce ? 10 : Math.round(Math.min(40, w / 30));
+    let particles: Particle[] = [];
+    for (let i = 0; i < heartCount; i++) particles.push(ambientHeart(true));
+    for (let i = 0; i < sparkCount; i++) particles.push(ambientSpark());
 
-      const currentParticles = particlesRef.current;
-      currentParticles.forEach((p) => {
-        p.y += p.speedY;
-        p.wobble += p.wobbleSpeed;
-        p.x += Math.sin(p.wobble) * 0.5 + p.speedX;
-
-        // Nếu hạt bay ra ngoài màn hình ở phía trên, đưa về lại phía dưới
-        if (p.y < -50) {
-          p.y = canvas.height + 50;
-          p.x = Math.random() * canvas.width;
-          p.opacity = Math.random() * 0.5 + 0.3;
-        }
-
-        drawHeart(ctx, p.x, p.y, p.size, p.color, p.opacity);
-      });
-
-      // Tạo các hạt lấp lánh khi di chuột
-      if (mousePosRef.current.x !== -1000) {
-        if (Math.random() < 0.15) {
-          currentParticles.push({
-            x: mousePosRef.current.x + (Math.random() * 20 - 10),
-            y: mousePosRef.current.y + (Math.random() * 20 - 10),
-            size: Math.random() * 8 + 4,
-            speedY: -(Math.random() * 1 + 0.3),
-            speedX: Math.random() * 0.8 - 0.4,
-            opacity: 0.8,
-            color: colors[Math.floor(Math.random() * colors.length)],
-            wobble: Math.random() * 10,
-            wobbleSpeed: Math.random() * 0.05 + 0.02
-          });
-          // Giới hạn số lượng hạt tối đa để tránh lag (max 120)
-          if (currentParticles.length > 120) {
-            currentParticles.shift();
-          }
-        }
+    burstRef.current = (x, y, n, power = 1) => {
+      const count = reduce ? Math.ceil(n / 3) : n;
+      for (let i = 0; i < count; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const s = (Math.random() * 4 + 1.5) * power;
+        const isSpark = Math.random() < 0.3;
+        particles.push({
+          x,
+          y,
+          vx: Math.cos(a) * s,
+          vy: Math.sin(a) * s - 1.6 * power,
+          size: isSpark ? Math.random() * 2 + 1.2 : Math.random() * 9 + 6,
+          rot: (Math.random() - 0.5) * 0.8,
+          vr: (Math.random() - 0.5) * 0.08,
+          alpha: 1,
+          life: 1,
+          decay: Math.random() * 0.01 + 0.008,
+          gravity: 0.07,
+          phase: Math.random() * Math.PI * 2,
+          color: isSpark ? '#ffe7a8' : pick(heartColors),
+          kind: isSpark ? 'spark' : 'heart',
+          ambient: false,
+        });
       }
-
-      animationFrameId = requestAnimationFrame(render);
+      if (particles.length > 360) particles = particles.slice(particles.length - 360);
     };
 
+    let raf = 0;
+    let t = 0;
+    const render = () => {
+      t += 1;
+      ctx.clearRect(0, 0, w, h);
+      for (const p of particles) {
+        if (p.ambient) {
+          p.x += p.vx + Math.sin(t * 0.01 + p.phase) * 0.25;
+          p.y += p.vy;
+          p.rot += p.vr;
+          if (p.kind === 'heart' && p.y < -30) Object.assign(p, ambientHeart(false));
+          if (p.kind === 'spark' && p.y < -5) p.y = h + 5;
+        } else {
+          p.vx *= 0.985;
+          p.vy = p.vy * 0.985 + p.gravity;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rot += p.vr;
+          p.life -= p.decay;
+        }
+
+        const a = p.ambient
+          ? p.kind === 'spark'
+            ? p.alpha * (0.35 + 0.65 * Math.abs(Math.sin(t * 0.02 + p.phase)))
+            : p.alpha
+          : Math.max(0, p.life);
+        if (a <= 0) continue;
+
+        ctx.save();
+        ctx.globalAlpha = a;
+        ctx.translate(p.x, p.y);
+        if (p.kind === 'heart') {
+          ctx.rotate(p.rot);
+          ctx.scale(p.size, p.size);
+          ctx.fillStyle = p.color;
+          ctx.fill(heart);
+        } else {
+          const g = ctx.createRadialGradient(0, 0, 0, 0, 0, p.size * 4);
+          g.addColorStop(0, p.color);
+          g.addColorStop(1, 'rgba(255,240,210,0)');
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size * 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+      particles = particles.filter((p) => p.ambient || p.life > 0);
+      raf = requestAnimationFrame(render);
+    };
     render();
 
     return () => {
-      window.removeEventListener('resize', resizeCanvas);
-      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(raf);
     };
   }, []);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    mousePosRef.current = { x: e.clientX, y: e.clientY };
-  };
-
-  const handleMouseLeave = () => {
-    mousePosRef.current = { x: -1000, y: -1000 };
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (e.touches.length > 0) {
-      mousePosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    }
-  };
-
-  // Hàm tạo hạt bùng nổ khi chấp nhận tỏ tình
-  const triggerCelebrationParticles = (count = 40) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const colors = ['#ff2f68', '#ff7675', '#fd79a8', '#ff007f', '#ffeaa7'];
-
-    // Thêm hạt bay từ trung tâm màn hình ra
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-
-    for (let i = 0; i < count; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = Math.random() * 4.5 + 1.5;
-      particlesRef.current.push({
-        x: centerX,
-        y: centerY,
-        size: Math.random() * 12 + 6,
-        speedY: Math.sin(angle) * speed - 0.6, // Đẩy bay ra ngoài kết hợp bay lên nhẹ
-        speedX: Math.cos(angle) * speed,
-        opacity: 1,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        wobble: Math.random() * 10,
-        wobbleSpeed: Math.random() * 0.08 + 0.03
-      });
-    }
-  };
-
-  // ==========================================
-  // 3. HỆ THỐNG PHÁT NHẠC (WEB AUDIO API SYNTHESIZER)
-  // ==========================================
-  const scheduleNote = (ctx: AudioContext, freq: number, startTime: number, duration: number, isMelody = false) => {
-    const osc = ctx.createOscillator();
-    const gainNode = ctx.createGain();
-
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(freq, startTime);
-
-    // Music box envelope
-    gainNode.gain.setValueAtTime(0, startTime);
-    gainNode.gain.linearRampToValueAtTime(isMelody ? 0.14 : 0.07, startTime + 0.015);
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-
-    // Echo effect (reverb/delay)
-    const delay = ctx.createDelay();
-    delay.delayTime.value = 0.38;
-    const feedback = ctx.createGain();
-    feedback.gain.value = 0.38;
-
-    delay.connect(feedback);
-    feedback.connect(delay);
-
-    osc.connect(gainNode);
-    gainNode.connect(ctx.destination);
-
-    gainNode.connect(delay);
-    delay.connect(ctx.destination);
-
-    osc.start(startTime);
-    osc.stop(startTime + duration + 1.2);
-  };
-
-  useEffect(() => {
-    if (!isPlaying || musicType !== 'synth') {
-      if (synthIntervalRef.current) {
-        clearInterval(synthIntervalRef.current);
-        synthIntervalRef.current = null;
-      }
-      return;
-    }
-
-    // Tắt MP3 nếu đang phát
-    if (audioTagRef.current) {
-      audioTagRef.current.pause();
-    }
-
-    if (!audioCtxRef.current) {
-      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-    }
-    const ctx = audioCtxRef.current;
-    if (ctx.state === 'suspended') {
-      ctx.resume();
-    }
-
-    let nextNoteTime = ctx.currentTime + 0.05;
-    let step = 0;
-
-    const scheduleNextNotes = () => {
-      while (nextNoteTime < ctx.currentTime + 0.3) {
-        const chordIndex = Math.floor(step / 4) % 8;
-        const noteInChordIndex = step % 4;
-
-        // Phát note đệm (arpeggio)
-        const baseFreq = SYNTH_CHORDS[chordIndex][noteInChordIndex];
-        scheduleNote(ctx, baseFreq, nextNoteTime, 1.8, false);
-
-        // Phát note giai điệu chính (ở phách đầu của mỗi hợp âm)
-        if (noteInChordIndex === 0) {
-          const melodyFreq = SYNTH_MELODY[chordIndex];
-          scheduleNote(ctx, melodyFreq, nextNoteTime, 2.8, true);
-        }
-
-        nextNoteTime += 0.5; // Mỗi step kéo dài 0.5 giây
-        step = (step + 1) % 32;
-      }
-    };
-
-    synthIntervalRef.current = setInterval(scheduleNextNotes, 100);
-
-    return () => {
-      if (synthIntervalRef.current) {
-        clearInterval(synthIntervalRef.current);
-        synthIntervalRef.current = null;
-      }
-    };
-  }, [isPlaying, musicType]);
-
-  // ==========================================
-  // 4. HỆ THỐNG PHÁT NHẠC (MP3 TAG CONTROL)
-  // ==========================================
-  useEffect(() => {
-    const audio = audioTagRef.current;
+  // ---------- Nhạc ----------
+  const fadeInMusic = () => {
+    const audio = audioRef.current;
     if (!audio) return;
+    audio.volume = 0;
+    audio
+      .play()
+      .then(() => {
+        setIsPlaying(true);
+        let v = 0;
+        const id = window.setInterval(() => {
+          v = Math.min(0.6, v + 0.04);
+          audio.volume = v;
+          if (v >= 0.6) clearInterval(id);
+        }, 120);
+      })
+      .catch(() => setIsPlaying(false));
+  };
 
-    if (isPlaying && musicType === 'mp3') {
-      // Dừng synth
-      if (synthIntervalRef.current) {
-        clearInterval(synthIntervalRef.current);
-        synthIntervalRef.current = null;
-      }
-
-      if (selectedMp3Index === 999 && customMusicUrl) {
-        audio.src = customMusicUrl;
-      } else {
-        // Fallback to first playlist item if 999 is selected but no custom URL is present
-        audio.src = MP3_PLAYLIST[selectedMp3Index === 999 ? 0 : selectedMp3Index].url;
-      }
-
-      audio.play().catch(err => {
-        console.log("Autoplay blocked or link error. Waiting for interaction.", err);
-      });
+  const toggleMusic = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (audio.paused) {
+      audio.volume = 0.6;
+      audio.play().then(() => setIsPlaying(true)).catch(() => { });
     } else {
       audio.pause();
+      setIsPlaying(false);
     }
-  }, [isPlaying, musicType, selectedMp3Index, customMusicUrl]);
+  };
 
-  // ==========================================
-  // 5. HIỆU ỨNG CHỮ CHẠY (TYPEWRITER)
-  // ==========================================
+  // ---------- Màn 1: mở thư ----------
+  const openLetter = () => {
+    if (opening) return;
+    setOpening(true);
+    fadeInMusic();
+
+    const r = tiltRef.current?.getBoundingClientRect();
+    if (r) later(() => burstRef.current(r.left + r.width / 2, r.top + r.height * 0.58, 26, 0.9), 250);
+
+    later(() => setLeaving(true), 1900);
+    later(() => {
+      window.scrollTo(0, 0);
+      setScreen('letter');
+      setLeaving(false);
+      setOpening(false);
+    }, 2600);
+  };
+
+  // ---------- Màn 2: hiện dần từng đoạn + thanh tiến độ ----------
   useEffect(() => {
-    if (screen !== 'reading' || currentPage !== 0) return;
-    setTypedText('');
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i < letterContent.length) {
-        setTypedText(letterContent.substring(0, i + 1));
-        i++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 45); // Tốc độ gõ chữ (45ms/ký tự)
+    if (screen !== 'letter') return;
 
-    return () => clearInterval(interval);
-  }, [screen, currentPage]);
+    const io = new IntersectionObserver(
+      (entries) => {
+        let k = 0;
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const el = entry.target as HTMLElement;
+          el.style.setProperty('--d', `${k * 0.18}s`);
+          el.classList.add('in');
+          io.unobserve(el);
+          k += 1;
+        });
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -6% 0px' }
+    );
+    // đợi một nhịp để thẻ thư trượt lên trước
+    const start = window.setTimeout(() => {
+      document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+    }, 450);
 
-  // ==========================================
-  // 6. CÁC HÀM XỬ LÝ TƯƠNG TÁC GIAO DIỆN
-  // ==========================================
-  const handleOpenEnvelope = () => {
-    setEnvelopeOpen(true);
-    setIsPlaying(true); // Phát nhạc ngay lập tức khi tương tác mở thư
+    const onScroll = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const p = max > 0 ? window.scrollY / max : 1;
+      progressRef.current?.style.setProperty('--p', `${Math.min(1, Math.max(0, p))}`);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
 
-    // Kích hoạt audio context nếu có
-    if (!audioCtxRef.current) {
-      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-    }
-    if (audioCtxRef.current.state === 'suspended') {
-      audioCtxRef.current.resume();
-    }
-
-    // Đợi hiệu ứng mở phong thư hoàn thành rồi zoom chuyển cảnh
-    setTimeout(() => {
-      setZoomTransition(true);
-      setTimeout(() => {
-        setScreen('reading');
-      }, 1500); // 1.5s zoom transition
-    }, 1200); // Đợi 1.2s mở nắp và kéo lá thư lên
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < 2) {
-      setCurrentPage(prev => prev + 1);
-    }
-  };
-
-  const handlePrevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage(prev => prev - 1);
-    }
-  };
-
-  // Nút Không chạy trốn ngẫu nhiên
-  const handleNoBtnInteraction = () => {
-    const randomX = (Math.random() * 160) - 80; // Giới hạn nhảy trong khoảng -80px đến 80px chiều ngang
-    const randomY = (Math.random() * 120) - 100; // Nhảy chiều dọc từ -100px lên trên đến 20px xuống dưới
-
-    setNoBtnStyle({
-      position: 'relative',
-      transform: `translate(${randomX}px, ${randomY}px)`,
-      transition: 'transform 0.15s ease'
-    });
-
-    // Mỗi lần bấm "Không", nút "Đồng ý" to ra 15%
-    setYesBtnScale(prev => Math.min(prev + 0.15, 2.5));
-  };
-
-  const handleAcceptProposal = () => {
-    setScreen('accepted');
-  };
-
-  // Quản lý mưa tim ở màn hình chúc mừng (có dọn dẹp tránh lag)
-  useEffect(() => {
-    if (screen !== 'accepted') return;
-
-    // Bắn đợt tim đầu tiên (50 hạt)
-    triggerCelebrationParticles(50);
-
-    // Mưa tim nhẹ nhàng hơn sau đó (15 hạt mỗi 2 giây)
-    const interval = setInterval(() => {
-      triggerCelebrationParticles(15);
-    }, 2000);
-
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(start);
+      io.disconnect();
+      window.removeEventListener('scroll', onScroll);
+    };
   }, [screen]);
 
-  const togglePlayPause = () => {
-    setIsPlaying(prev => !prev);
+  const foldLetter = () => {
+    if (folding) return;
+    setFolding(true);
+    later(() => {
+      window.scrollTo(0, 0);
+      setScreen('sealed');
+      setFolding(false);
+    }, 1000);
+  };
+
+  // ---------- Màn 3: niêm phong, bắn tim ----------
+  useEffect(() => {
+    if (screen !== 'sealed') return;
+    const id = window.setTimeout(() => {
+      const r = sealedEnvRef.current?.getBoundingClientRect();
+      if (r) burstRef.current(r.left + r.width / 2, r.top + r.height * 0.58, 60, 1.2);
+    }, 1250);
+    return () => clearTimeout(id);
+  }, [screen]);
+
+  const rereadLetter = () => {
+    setLeaving(true);
+    later(() => {
+      window.scrollTo(0, 0);
+      setScreen('letter');
+      setLeaving(false);
+    }, 500);
+  };
+
+  const tapHearts = (e: React.PointerEvent) => {
+    if ((e.target as HTMLElement).closest('button, .env-tilt')) return;
+    burstRef.current(e.clientX, e.clientY, 8, 0.55);
   };
 
   return (
-    <div
-      className="app-container"
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      onTouchMove={handleTouchMove}
-    >
-      {/* Background canvas tạo các hạt tim bay */}
-      <canvas ref={canvasRef} className="heart-canvas" />
+    <div className="app" onPointerDown={tapHearts}>
+      <div className="backdrop" aria-hidden="true">
+        <span className="blob blob-a" />
+        <span className="blob blob-b" />
+        <span className="blob blob-c" />
+      </div>
+      <canvas ref={canvasRef} className="fx-canvas" aria-hidden="true" />
+      <audio ref={audioRef} src="/bientinh.mp3" loop preload="auto" />
 
-      {/* Thẻ audio ẩn để chơi nhạc MP3 */}
-      <audio ref={audioTagRef} loop />
-
-      {/* Floating Music Widget */}
-      {screen !== 'envelope' && (
-        <div className="music-record-wrapper">
-          <div
-            className={`music-record-disc ${isPlaying ? 'playing' : ''}`}
-            onClick={() => setMusicMenuOpen(prev => !prev)}
-            title="Cài đặt nhạc"
-          >
-            <svg viewBox="0 0 100 100" className="vinyl-record" width="100%" height="100%">
-              {/* Outer black disc */}
-              <circle cx="50" cy="50" r="48" fill="#2d3436" stroke="#1e272e" strokeWidth="2" />
-              {/* Inner grooves */}
-              <circle cx="50" cy="50" r="38" fill="none" stroke="#57606f" strokeWidth="1" strokeDasharray="8, 4" />
-              <circle cx="50" cy="50" r="28" fill="none" stroke="#57606f" strokeWidth="0.5" />
-              <circle cx="50" cy="50" r="18" fill="none" stroke="#57606f" strokeWidth="0.5" />
-              {/* Center sticker (pink) */}
-              <circle cx="50" cy="50" r="14" fill="#ff6b8b" />
-              {/* Heart icon in the center */}
-              <path d="M50 54.5l-2.45-2.22C41.4 46.86 38 43.78 38 40c0-3.08 2.42-5.5 5.5-5.5 1.74 0 3.41.81 4.5 2.09 1.09-1.28 2.76-2.09 4.5-2.09 3.08 0 5.5 2.42 5.5 5.5 0 3.78-3.4 6.86-8.55 11.54L50 54.5z" fill="white" />
-            </svg>
-          </div>
-
-          {musicMenuOpen && (
-            <div className="music-settings-panel">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--rose-gold)' }}>Cấu hình âm nhạc</span>
-                <button
-                  onClick={() => setMusicMenuOpen(false)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '16px', padding: '0 5px' }}
-                >
-                  ×
-                </button>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '5px' }}>
-                <span className="music-label" style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Trạng thái:</span>
-                <button
-                  className="music-toggle-btn"
-                  onClick={togglePlayPause}
-                  style={{
-                    background: isPlaying ? 'var(--primary-pink)' : '#dfe6e9',
-                    color: isPlaying ? 'white' : 'var(--text-muted)',
-                    border: 'none',
-                    borderRadius: '15px',
-                    padding: '4px 12px',
-                    fontSize: '11px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  {isPlaying ? "Đang phát" : "Đang tắt"}
-                </button>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span className="music-label" style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Nguồn phát:</span>
-                <select
-                  className="music-select-box"
-                  value={musicType}
-                  onChange={(e) => setMusicType(e.target.value as any)}
-                  style={{
-                    border: '1px solid var(--soft-pink)',
-                    borderRadius: '8px',
-                    padding: '3px 8px',
-                    fontSize: '11px',
-                    outline: 'none',
-                    color: 'var(--primary-pink)',
-                    background: 'white'
-                  }}
-                >
-                  <option value="synth">Hộp Nhạc (Synth)</option>
-                  <option value="mp3">Lofi Acoustic</option>
-                </select>
-              </div>
-
-              {musicType === 'mp3' && (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span className="music-label" style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Bài hát:</span>
-                    <select
-                      className="music-select-box"
-                      value={selectedMp3Index}
-                      onChange={(e) => setSelectedMp3Index(Number(e.target.value))}
-                      style={{
-                        border: '1px solid var(--soft-pink)',
-                        borderRadius: '8px',
-                        padding: '3px 8px',
-                        fontSize: '11px',
-                        outline: 'none',
-                        color: 'var(--primary-pink)',
-                        background: 'white',
-                        maxWidth: '100px'
-                      }}
-                    >
-                      {MP3_PLAYLIST.map((song, idx) => (
-                        <option key={idx} value={idx}>{song.name}</option>
-                      ))}
-                      {customMusicUrl && (
-                        <option value={999}>📁 Thiết bị...</option>
-                      )}
-                    </select>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '5px', borderTop: '1px dashed var(--soft-pink)', paddingTop: '6px' }}>
-                    <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Hoặc chọn MP3 từ máy của em:</span>
-                    <label
-                      style={{
-                        display: 'block',
-                        textAlign: 'center',
-                        background: 'var(--light-pink)',
-                        border: '1px dashed var(--primary-pink)',
-                        borderRadius: '8px',
-                        padding: '4px 6px',
-                        fontSize: '10px',
-                        color: 'var(--primary-pink)',
-                        cursor: 'pointer',
-                        fontWeight: 'bold',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      {customMusicName ? `🎵 ${customMusicName.substring(0, 13)}...` : "Chọn file .mp3..."}
-                      <input
-                        type="file"
-                        accept="audio/*"
-                        onChange={handleCustomMusicUpload}
-                        style={{ display: 'none' }}
-                      />
-                    </label>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </div>
+      {screen !== 'invite' && (
+        <button
+          className={`music-btn ${isPlaying ? 'is-playing' : ''}`}
+          onClick={toggleMusic}
+          aria-label={isPlaying ? 'Tắt nhạc' : 'Bật nhạc'}
+          title={isPlaying ? 'Tắt nhạc' : 'Bật nhạc'}
+        >
+          <span className="eq">
+            <i />
+            <i />
+            <i />
+            <i />
+          </span>
+        </button>
       )}
 
-      {/* ==========================================
-         A. MÀN HÌNH CHƯA MỞ PHONG THƯ (ENVELOPE SCREEN)
-         ========================================== */}
-      {screen === 'envelope' && (
-        <div className={`envelope-container ${zoomTransition ? 'envelope-zoom-out' : ''}`}>
-          <div
-            className={`envelope-wrapper ${envelopeOpen ? 'open' : ''}`}
-            onClick={!envelopeOpen ? handleOpenEnvelope : undefined}
-          >
-            <div className="flap"></div>
-            <div className="letter-preview">
-              <span style={{ fontFamily: 'var(--font-romantic)', fontSize: '26px', color: 'var(--rose-gold)', fontWeight: 'bold' }}>
-                Gửi Em Yêu...
-              </span>
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px' }}>
-                (Bấm để mở thư tình)
-              </span>
-            </div>
-            <div className="pocket"></div>
-            <div className="heart-seal">
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-              </svg>
+      {/* ========== MÀN 1: NHỬ MỞ THƯ ========== */}
+      {screen === 'invite' && (
+        <main className={`screen invite ${opening ? 'is-opening' : ''} ${leaving ? 'is-leaving' : ''}`}>
+          <p className="eyebrow rise" style={vars({ '--d': '0.1s' })}>
+            Một lá thư buổi sáng
+          </p>
+          <h1 className="invite-title rise" style={vars({ '--d': '0.25s' })}>
+            Quỳnh ơi, có thư nè!
+          </h1>
+
+          <div className="env-float rise" style={vars({ '--d': '0.55s' })}>
+            <div
+              ref={tiltRef}
+              className="env-tilt"
+              role="button"
+              aria-label="Mở thư"
+              onClick={openLetter}
+            >
+              <span className="env-glow" />
+              <Envelope state={opening ? 'opening' : 'closed'} />
             </div>
           </div>
-          <div className="click-prompt">
-            <span>Bấm vào trái tim để mở thư</span>
-            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-            </svg>
-          </div>
-        </div>
+
+          <button className="cta rise" style={vars({ '--d': '0.8s' })} onClick={openLetter}>
+            <HeartIcon className="cta-heart" />
+            Chạm để mở thư
+          </button>
+        </main>
       )}
 
-      {/* ==========================================
-         B. MÀN HÌNH ĐANG ĐỌC THƯ (LETTER SCREEN)
-         ========================================== */}
-      {/* ==========================================
-         B. MÀN HÌNH ĐANG ĐỌC THƯ (LETTER SCREEN)
-         ========================================== */}
-      {screen === 'reading' && (
-        <div className="reading-layout">
-          <div className="polaroid-card">
-            <div className="polaroid-img-wrapper">
-              <img src="/q2.jpg" alt="Her" className="polaroid-img" />
-            </div>
-            <div className="polaroid-caption">Người làm anh say đắm ✨</div>
-          </div>
+      {/* ========== MÀN 2: LÁ THƯ ========== */}
+      {screen === 'letter' && (
+        <main className={`screen letter-screen ${leaving ? 'is-leaving' : ''}`}>
+          <div ref={progressRef} className="progress" aria-hidden="true" />
 
-          <div className="letter-card">
-            {/* Họa tiết trang trí góc */}
-            <div className="letter-decor-top">
-              <span className="decor-heart">🌸</span>
-              <span className="decor-heart">🌸</span>
-            </div>
+          <article className={`paper ${folding ? 'is-folding' : ''}`}>
+            <div className="paper-corner tl" aria-hidden="true" />
+            <div className="paper-corner br" aria-hidden="true" />
 
-            <div className="letter-body">
-              {/* TRANG 1: LỜI TỎ TÌNH */}
-              {currentPage === 0 && (
-                <>
-                  <div className="letter-header">Thư gửi em yêu của anh...</div>
-                  <div className="letter-text">{typedText}</div>
-                </>
-              )}
+            <p className="paper-date reveal">Sáng {today}</p>
 
-              {/* TRANG 2: CÁC KỶ NIỆM / LÝ DO */}
-              {currentPage === 1 && (
-                <div className="memories-container">
-                  <div className="letter-header" style={{ marginBottom: '10px' }}>Anh có thể hứa với em rằng</div>
-                  <div className="memory-card">
-                    <div className="memory-icon">❤️</div>
-                    <div className="memory-content">
-                      <h3>Giữ bí mật vấn đề của 2 đứa</h3>
-                      <p>Khi có vấn đề gì anh sẽ nhẹ nhàng tâm sự với em, không bao giờ giấu diếm em nữa.</p>
-                    </div>
-                  </div>
-                  <div className="memory-card">
-                    <div className="memory-icon">☕</div>
-                    <div className="memory-content">
-                      <h3>Luôn lắng nghe em</h3>
-                      <p>Anh sẽ lắng nghe mọi tâm sự của em, không bao giờ để em buồn nữa</p>
-                    </div>
-                  </div>
-                </div>
-              )}
+            <header className="paper-head reveal">
+              <p className="greet">{GREETING}</p>
+              <p className="greet-name">
+                <span className="dash">—</span> {NAME} <HeartIcon className="inline-heart" />
+              </p>
+            </header>
 
-              {/* TRANG 3: LỜI ĐỀ NGHỊ CHÍNH */}
-              {currentPage === 2 && (
-                <div className="proposal-box">
-                  <div className="proposal-gif-placeholder">
-                    <div className="pulse-ring"></div>
-                    <div className="pulse-ring" style={{ animationDelay: '1s' }}></div>
-                    <div className="pulse-ring" style={{ animationDelay: '2s' }}></div>
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                    </svg>
-                  </div>
-                  <div className="proposal-title">Điều quan trọng mà anh muốn nói... 💌</div>
-                  <div style={{ fontFamily: 'var(--font-romantic)', fontSize: '26px', color: 'var(--text-dark)' }}>
-                    Em đồng ý tha lỗi cho anh và tiếp tục cùng anh đi tiếp chặng đường phía trước nhé? ❤️
-                  </div>
-
-                  <div className="proposal-buttons">
-                    <button
-                      className="btn-yes"
-                      onClick={handleAcceptProposal}
-                      style={{ transform: `scale(${yesBtnScale})` }}
-                    >
-                      Em tha lỗi cho anh! 🥰
-                    </button>
-                    <button
-                      className="btn-no"
-                      style={noBtnStyle}
-                      onMouseEnter={handleNoBtnInteraction}
-                      onTouchStart={handleNoBtnInteraction}
-                      onClick={handleNoBtnInteraction}
-                    >
-                      Vẫn giận lắm 😜
-                    </button>
-                  </div>
-                </div>
-              )}
+            <div className="divider reveal" aria-hidden="true">
+              <span />
+              <HeartIcon />
+              <span />
             </div>
 
-            {/* Thanh chuyển trang (Footer) */}
-            <div className="letter-footer">
-              <button
-                className="btn-nav"
-                onClick={handlePrevPage}
-                disabled={currentPage === 0}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-                  <line x1="19" y1="12" x2="5" y2="12" />
-                  <polyline points="12 19 5 12 12 5" />
+            {PARAGRAPHS.map((p, i) => (
+              <p key={i} className={`para reveal ${i === 0 ? 'first' : ''}`}>
+                {p.text}
+              </p>
+            ))}
+
+            <aside className="ps reveal">
+              <span className="ps-tag">P.S.</span>
+              <p>
+                {PS_NOTE} <span aria-hidden="true">🥖</span>
+              </p>
+            </aside>
+
+            <footer className="signoff reveal">
+              <p className="sign-love">Yêu em nhiều lắm</p>
+              <p className="sign-name">{NAME}</p>
+            </footer>
+
+            <div className="fold-wrap reveal">
+              <button className="fold-btn" onClick={foldLetter}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                  <rect x="3" y="5" width="18" height="14" rx="2" />
+                  <path d="M3.5 6l8.5 6.5L20.5 6" />
                 </svg>
-                Trang trước
-              </button>
-
-              <div className="page-indicator-dots">
-                {[0, 1, 2].map((idx) => (
-                  <span
-                    key={idx}
-                    className={`indicator-dot ${currentPage === idx ? 'active' : ''}`}
-                    onClick={() => setCurrentPage(idx)}
-                    title={`Trang ${idx + 1}`}
-                  >
-                    ♥
-                  </span>
-                ))}
-              </div>
-
-              <button
-                className="btn-nav"
-                onClick={handleNextPage}
-                disabled={currentPage === 2}
-              >
-                Trang sau
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <polyline points="12 5 19 12 12 19" />
-                </svg>
+                Gấp thư lại
               </button>
             </div>
-          </div>
-        </div>
+          </article>
+        </main>
       )}
 
-      {/* ==========================================
-         C. MÀN HÌNH CHẤP NHẬN ĐỒNG Ý (CELEBRATION SCREEN)
-         ========================================== */}
-      {screen === 'accepted' && (
-        <div className="reading-layout">
-          <div className="polaroid-card" style={{ transform: 'rotate(2deg)' }}>
-            <div className="polaroid-img-wrapper">
-              <img src="/q1.jpg" alt="Her" className="polaroid-img" />
-            </div>
-            <div className="polaroid-caption">My Love ❤️</div>
+      {/* ========== MÀN 3: ĐÓNG THƯ ========== */}
+      {screen === 'sealed' && (
+        <main className={`screen sealed ${leaving ? 'is-leaving' : ''}`}>
+          <div ref={sealedEnvRef} className="sealed-env">
+            <Envelope state="sealed" />
           </div>
 
-          <div className="letter-card" style={{ maxWidth: '550px', minHeight: '400px' }}>
-            <div className="letter-decor-top">
-              <span className="decor-heart">💖</span>
-              <span className="decor-heart">💖</span>
-            </div>
+          <p className="eyebrow rise" style={vars({ '--d': '1.5s' })}>
+            Thư đã được niêm phong bằng một cái ôm
+          </p>
+          <h2 className="sealed-title rise" style={vars({ '--d': '1.7s' })}>
+            Yêu em nhiều lắm
+          </h2>
+          <p className="sealed-name rise" style={vars({ '--d': '1.9s' })}>
+            {NAME}
+          </p>
 
-            <div className="letter-body">
-              <div className="celebration-box">
-                <p className="celebration-icon">🎉❤️💍</p>
-                <h2 className="celebration-title">Yeah! Anh biết mà!</h2>
-                <p className="celebration-text">
-                  Cảm ơn em đã tha lỗi cho anh! Anh hứa sẽ luôn làm em cười, sửa chữa lỗi lầm và yêu thương em thật nhiều mỗi ngày! 🥰🌸
-                </p>
-                <p style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', color: 'var(--text-muted)', marginTop: '20px' }}>
-                  - Gửi em yêu ngàn trái tim ngọt ngào nhất -
-                </p>
-              </div>
-            </div>
+          <div className="reminder rise" style={vars({ '--d': '2.2s' })}>
+            <span>
+              Nhớ ghé quán <b>bánh mỳ BBQ</b> lấy đồ ăn sáng nha em!
+            </span>
           </div>
-        </div>
+
+          <button className="ghost-btn rise" style={vars({ '--d': '2.5s' })} onClick={rereadLetter}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+              <path d="M3 12a9 9 0 1 0 3-6.7" />
+              <path d="M3 4v5h5" />
+            </svg>
+            Đọc lại thư
+          </button>
+        </main>
       )}
     </div>
   );
